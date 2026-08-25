@@ -219,7 +219,7 @@ renderAll();
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc,
   onSnapshot, query, orderBy, serverTimestamp, runTransaction
@@ -239,7 +239,7 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const firestore = getFirestore(app);
 
-window.NAVKAR_FB = {app,auth,provider,firestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,runTransaction,signInWithPopup,signOut};
+window.NAVKAR_FB = {app,auth,provider,firestore,collection,doc,getDoc,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,serverTimestamp,runTransaction,signInWithPopup,signInWithRedirect,signOut};
 </script>
 
 <script>
@@ -249,12 +249,25 @@ let fbUser=null;
 
 async function googleLogin(){
   try{
+    const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if(isMobile){
+      await NAVKAR_FB.signInWithRedirect(NAVKAR_FB.auth,NAVKAR_FB.provider);
+      return;
+    }
     const r=await NAVKAR_FB.signInWithPopup(NAVKAR_FB.auth,NAVKAR_FB.provider);
     fbUser=r.user;
-  }catch(e){ alert(e.message); }
+  }catch(e){ alert('Google login failed: '+(e?.message||e)); }
 }
 async function googleLogout(){
-  try{ await NAVKAR_FB.signOut(NAVKAR_FB.auth); }catch(e){}
+  try{
+    await NAVKAR_FB.signOut(NAVKAR_FB.auth);
+    localStorage.removeItem('navkarV3');
+    role=null;
+    fbUser=null;
+    fbReady=false;
+  }catch(e){
+    alert('Logout failed: '+(e?.message||e));
+  }
 }
 async function getMyRole(user){
   const ref=NAVKAR_FB.doc(NAVKAR_FB.firestore,"users",user.uid);
@@ -295,7 +308,7 @@ async function ensureCloud(){
 }
 NAVKAR_FB.onAuthStateChanged(NAVKAR_FB.auth, async user=>{
   if(!user){
-    fbUser=null; fbReady=false;
+    fbUser=null; fbReady=false; role=null; document.getElementById("roleBadge").textContent=""; document.getElementById("masterNav").classList.add("hidden");
     fbUnsubs.forEach(x=>x()); fbUnsubs=[];
     document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
     document.getElementById("googleLogin").classList.add("active");
