@@ -1,0 +1,745 @@
+<!doctype html>
+<!--
+PIN AUTHENTICATION SETUP:
+Enable Firebase Authentication -> Sign-in method -> Email/Password.
+Create ONE Firebase Authentication user:
+Email: navkar.atc@gmail.com
+Password: choose your PIN (for example 2580 initially).
+The PIN is sent directly to Firebase Authentication; it is NOT stored in this HTML file.
+After creating the user, this screen accepts that PIN.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b2c1f">
+<title>Navkar Impex — Inventory</title>
+<style>
+:root{--nav:#5b2c1f;--nav2:#7b3f25;--accent:#d99a2b;--ink:#2b211d;--muted:#7a6a62;--bg:#fbf7f2;--card:#fffdf9;--line:#eadfd4;--ok:#2f7d32;--bad:#b42318;--warn:#a15c00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Inter,Roboto,Arial,sans-serif;color:var(--ink)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:20;background:var(--nav);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px #0002}
+header h1{margin:0;font-size:22px}
+header .user{font-size:12px;opacity:.85;margin-right:10px}
+#app{max-width:1000px;margin:auto;padding:16px 16px 90px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #00000008}
+h2,h3{margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}}
+label{display:block;font-weight:700;font-size:13px;color:#596575;margin-bottom:6px}
+input,select{width:100%;padding:12px;border:1px solid #d5dce5;border-radius:10px;background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #d99a2b22}
+.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:700}
+.primary{background:var(--nav);color:#fff}.accent{background:var(--accent);color:#2b211d}.whatsapp{background:#25d366;color:#073b1f}.outline{background:#fffdf9;color:var(--nav);border:1px solid var(--line)}
+.secondary{background:#edf2f7;color:var(--nav)}
+.danger{background:#fee4e2;color:var(--bad)}
+.success{background:#dcfae8;color:var(--ok)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tabs{display:flex;gap:7px;overflow:auto;padding:2px 0 12px;position:sticky;top:61px;background:var(--bg);z-index:10}
+.tab{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-weight:700;color:#52606d}
+.tab.active{background:var(--nav);color:#fff;border-color:var(--nav)}
+.hidden{display:none!important}
+.small{font-size:12px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:650px){.kpis{grid-template-columns:1fr}}
+.kpi{padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.kpi b{font-size:24px;display:block;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:#596575;background:#f8fafc}
+.tablewrap{overflow:auto}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#edf2f7}
+.badge.ok{background:#dcfae8;color:var(--ok)}
+.badge.bad{background:#fee4e2;color:var(--bad)}
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.loginbox{max-width:430px;width:100%;text-align:center}
+.logo{width:80px;height:80px;border-radius:22px;background:var(--nav);color:#fff;display:grid;place-items:center;font-size:38px;font-weight:800;margin:0 auto 20px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#18212b;color:#fff;padding:12px 16px;border-radius:10px;z-index:100;max-width:90%;box-shadow:0 5px 20px #0004}
+.modal{position:fixed;inset:0;background:#0007;display:grid;place-items:center;padding:18px;z-index:50}
+.modalbox{background:#fff;border-radius:16px;max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:18px}
+.iconbtn{border:0;background:transparent;font-size:20px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:center;gap:5px;padding:8px;z-index:20}
+nav button{border:0;background:transparent;padding:8px 13px;border-radius:10px;color:#667085;font-weight:700}
+nav button.active{color:var(--nav);background:#f4e9dd}
+.empty{padding:25px;text-align:center;color:var(--muted)}
+.brand-sub{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;opacity:.82}
+.section-actions{display:flex;gap:8px;flex-wrap:wrap}
+.kpi.accent-kpi{border-top:4px solid var(--accent)}
+.kpi.green-kpi{border-top:4px solid var(--ok)}
+.kpi.dark-kpi{border-top:4px solid var(--nav)}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+  <div class="card loginbox">
+    <div class="logo">N</div>
+    <h1>NAVKAR IMPEX</h1>
+    <div class="brand-sub" style="color:var(--nav);margin-bottom:8px">Spices • Dry Fruits • Seeds</div>
+    <p class="small">Enter your company PIN to continue</p>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="12"
+           placeholder="Enter PIN" autocomplete="current-password"
+           style="text-align:center;font-size:22px;letter-spacing:5px;margin-top:14px">
+    <button id="pinBtn" class="btn primary" style="width:100%;margin-top:12px">Login</button>
+    <p id="loginMsg" class="small" style="margin-top:12px"></p>
+  </div>
+</div>
+
+<div id="shell" class="hidden">
+<header>
+  <div><h1>NAVKAR IMPEX</h1><div class="brand-sub">Spices • Dry Fruits • Seeds</div><span id="sync" class="small" style="color:#fff"></span></div>
+  <div class="row"><span id="who" class="user"></span><button id="logout" class="btn secondary">Logout</button></div>
+</header>
+
+<div id="app">
+  <div class="tabs">
+    <button class="tab active" data-page="home">Home</button>
+    <button class="tab" data-page="entry">Entry</button>
+    <button class="tab" data-page="items">Items</button>
+    <button class="tab" data-page="godowns">Godowns</button>
+    <button class="tab" data-page="history">History</button>
+    <button class="tab" data-page="reports">Reports</button>
+    <button class="tab" data-page="audit">Audit Trail</button>
+  </div>
+
+  <section id="home" class="page">
+    <div class="card"><div class="spread"><div><h2>Dashboard</h2><div class="small" id="dataStatus">Connecting to Firebase…</div></div><button class="btn secondary" id="refresh">Refresh</button></div></div>
+    <div class="kpis">
+      <div class="kpi dark-kpi"><span class="small">Items</span><b id="kItems">0</b></div>
+      <div class="kpi accent-kpi"><span class="small">Godowns</span><b id="kGodowns">0</b></div>
+      <div class="kpi dark-kpi"><span class="small">Stock KG</span><b id="kStock">0</b></div>
+      <div class="kpi green-kpi"><span class="small">Today's IN</span><b id="kTodayIn">0</b></div>
+      <div class="kpi green-kpi"><span class="small">Today's OUT</span><b id="kTodayOut">0</b></div>
+      <div class="kpi accent-kpi"><span class="small">Today's Transfers</span><b id="kTodayTransfer">0</b></div>
+    </div>
+    <div class="card"><div class="spread"><div><h3>Item Summary</h3><div class="small">Stock position for the selected date</div></div><div style="min-width:220px"><label>Date</label><input id="dashboardDate" type="date"></div></div><div class="tablewrap"><table><thead><tr><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Transfer IN</th><th>Transfer OUT</th><th>Closing</th></tr></thead><tbody id="itemSummaryBody"></tbody></table></div></div>
+  </section>
+
+  <section id="entry" class="page hidden">
+    <div class="card"><h2>Stock Entry</h2>
+      <div class="grid">
+        <div><label>Type</label><select id="mType"><option value="IN">Stock In</option><option value="OUT">Stock Out</option><option value="TRANSFER">Godown Transfer</option></select></div>
+        <div><label>Date</label><input id="mDate" type="date"></div>
+        <div><label>Item</label><select id="mItem"></select></div>
+        <div><label>Quantity KG</label><input id="mQty" type="number" min="0.001" step="0.001"></div>
+        <div><label>From Godown</label><select id="mFrom"></select></div>
+        <div><label>To Godown</label><select id="mTo"></select></div>
+        <div><label>Party / Reference</label><input id="mParty" placeholder="Optional"></div>
+        <div><label>Note</label><input id="mNote" placeholder="Optional"></div>
+      </div>
+      <div class="row" style="margin-top:14px"><button id="saveMovement" class="btn primary">Save Movement</button><span id="entryHint" class="small"></span></div>
+    </div>
+  </section>
+
+  <section id="items" class="page hidden">
+    <div class="card"><div class="spread"><h2>Items</h2><button class="btn primary" id="newItem">+ New Item</button></div>
+      <input id="itemSearch" placeholder="Search item..." style="margin-bottom:12px">
+      <div class="tablewrap"><table><thead><tr><th>Item</th><th>Category</th><th>Unit</th><th>Actions</th></tr></thead><tbody id="itemsBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="godowns" class="page hidden">
+    <div class="card"><div class="spread"><h2>Godowns</h2><button class="btn primary" id="newGodown">+ New Godown</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Name</th><th>Active</th><th>Actions</th></tr></thead><tbody id="godownsBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="history" class="page hidden">
+    <div class="card"><div class="spread"><h2>History</h2><input id="histSearch" style="max-width:260px" placeholder="Search"></div>
+      <div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Godown</th><th>User</th><th>Action</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="reports" class="page hidden">
+    <div class="card"><div class="spread"><div><h2>Current Stock — Godown Wise</h2><div class="small">Live stock by item and godown</div></div><div class="section-actions"><button class="btn whatsapp" id="stockWaBtn">WhatsApp</button><button class="btn secondary" id="csvBtn">Export CSV</button><button class="btn accent" id="backupBtn">Backup</button></div></div>
+      <label>Godown</label><select id="stockGodownFilter"><option value="">All Godowns</option></select>
+      <div class="tablewrap"><table><thead><tr><th>Item</th><th>Godown</th><th>Stock KG</th></tr></thead><tbody id="stockBody"></tbody></table></div>
+    </div>
+    <div class="card"><div class="spread"><div><h2>Daily Summary</h2><div class="small">Item-wise movement for a selected date</div></div><button class="btn whatsapp" id="dailyWaBtn">WhatsApp</button></div>
+      <div class="grid"><div><label>Date</label><input id="dailyDate" type="date"></div><div><label>Godown</label><select id="dailyGodownFilter"><option value="">All Godowns</option></select></div></div>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Transfer IN</th><th>Transfer OUT</th><th>Closing</th></tr></thead><tbody id="dailyBody"></tbody></table></div>
+    </div>
+    <div class="card"><div class="spread"><div><h2>Date Range Report</h2><div class="small">Opening before start date + movements during the selected period</div></div><div class="section-actions"><button class="btn whatsapp" id="rangeWaBtn">WhatsApp</button><button class="btn secondary" id="rangeCsvBtn">Export CSV</button></div></div>
+      <div class="grid"><div><label>From Date</label><input id="rangeFrom" type="date"></div><div><label>To Date</label><input id="rangeTo" type="date"></div><div><label>Item</label><select id="rangeItemFilter"><option value="">All Items</option></select></div><div><label>Godown</label><select id="rangeGodownFilter"><option value="">All Godowns</option></select></div></div>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Item</th><th>Opening</th><th>IN</th><th>OUT</th><th>Transfer IN</th><th>Transfer OUT</th><th>Closing</th></tr></thead><tbody id="rangeBody"></tbody></table></div>
+    </div>
+    <div class="card"><div class="spread"><div><h2>Item Ledger</h2><div class="small">Complete item movement with running balance</div></div><button class="btn whatsapp" id="ledgerWaBtn">WhatsApp</button></div>
+      <div class="grid"><div><label>Item</label><select id="ledgerItemFilter"><option value="">Select Item</option></select></div><div><label>Godown</label><select id="ledgerGodownFilter"><option value="">All Godowns</option></select></div><div><label>From Date</label><input id="ledgerFrom" type="date"></div><div><label>To Date</label><input id="ledgerTo" type="date"></div></div>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Date</th><th>Type</th><th>Godown</th><th>IN</th><th>OUT</th><th>Balance</th><th>Reference</th></tr></thead><tbody id="ledgerBody"></tbody></table></div>
+    </div>
+  </section>
+  <section id="audit" class="page hidden">
+    <div class="card"><div class="spread"><div><h2>Audit Trail</h2><div class="small">Edits, deletes and important changes are retained separately.</div></div><button class="btn secondary" id="auditRefresh">Refresh</button></div>
+      <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Date/Time</th><th>Action</th><th>Item</th><th>Movement</th><th>Qty</th><th>User</th></tr></thead><tbody id="auditBody"></tbody></table></div>
+    </div>
+  </section>
+</div>
+<nav>
+  <button data-page="home" class="active">Home</button>
+  <button data-page="entry">Entry</button>
+  <button data-page="items">Items</button>
+  <button data-page="godowns">Godowns</button>
+  <button data-page="history">History</button>
+  <button data-page="reports">Reports</button>
+  <button data-page="audit">Audit</button>
+</nav>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modalbox"><div class="spread"><h3 id="modalTitle"></h3><button class="iconbtn" id="closeModal">×</button></div><div id="modalBody"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc, updateDoc, onSnapshot, getDocs, query, orderBy, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDCodQIzYnGvEle5wm2TPgQbZqicStUvQA",
+  authDomain: "navkar-stock.firebaseapp.com",
+  projectId: "navkar-stock",
+  storageBucket: "navkar-stock.firebasestorage.app",
+  messagingSenderId: "46124992179",
+  appId: "1:46124992179:web:8fb935187310e9fcf552c6",
+  measurementId: "G-TTCXE568EF"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let user=null, items=[], godowns=[], movements=[], auditLogs=[], unsub=[];
+const $=id=>document.getElementById(id);
+const toast=(m)=>{ $("toast").textContent=m; $("toast").classList.remove("hidden"); setTimeout(()=>$("toast").classList.add("hidden"),3000); };
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function dateOnlyLocal(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+const today=()=>dateOnlyLocal();
+function previousDate(date){
+  const [y,m,d]=String(date).split("-").map(Number);
+  if(!y||!m||!d)return "";
+  const x=new Date(Date.UTC(y,m-1,d));
+  x.setUTCDate(x.getUTCDate()-1);
+  return `${x.getUTCFullYear()}-${String(x.getUTCMonth()+1).padStart(2,"0")}-${String(x.getUTCDate()).padStart(2,"0")}`;
+}
+
+$("mDate").value=today();
+
+const NAVKAR_LOGIN_EMAIL = "navkar.atc@gmail.com";
+$("pinBtn").onclick=loginWithPin;
+$("pinInput").addEventListener("keydown", e=>{ if(e.key==="Enter") loginWithPin(); });
+
+async function loginWithPin(){
+  const pin=$("pinInput").value.trim();
+  if(!pin){ $("loginMsg").textContent="Enter your PIN."; return; }
+  $("pinBtn").disabled=true; $("pinBtn").textContent="Checking...";
+  $("loginMsg").textContent="";
+  try{
+    await signInWithEmailAndPassword(auth,NAVKAR_LOGIN_EMAIL,pin);
+    $("pinInput").value="";
+  }catch(e){
+    console.error("Firebase login error:", e);
+    const code = e?.code || "unknown";
+    const message = e?.message || "Unknown Firebase error";
+    $("loginMsg").textContent = `Firebase error: ${code}`;
+    $("loginMsg").title = message;
+    alert(`Firebase login failed\\n\\nCode: ${code}\\n\\nMessage: ${message}`);
+    $("pinInput").select();
+  }finally{
+    $("pinBtn").disabled=false; $("pinBtn").textContent="Login";
+  }
+}
+$("logout").onclick=()=>signOut(auth);
+
+onAuthStateChanged(auth, u=>{
+  user=u;
+  if(u){ $("login").classList.add("hidden"); $("shell").classList.remove("hidden"); $("who").textContent=u.displayName||u.email||""; startListeners(); }
+  else { $("shell").classList.add("hidden"); $("login").classList.remove("hidden"); stopListeners(); }
+});
+
+async function startListeners(){
+  stopListeners();
+  $("dataStatus").textContent="Loading Firebase data…";
+
+  try{
+    // First perform a direct authenticated read. This makes the initial
+    // dashboard deterministic and gives a useful error if Firestore rules,
+    // authentication, or the collection names are wrong.
+    const [itemSnap,godownSnap,movementSnap]=await Promise.all([
+      getDocs(collection(db,"items")),
+      getDocs(collection(db,"godowns")),
+      getDocs(collection(db,"movements"))
+    ]);
+
+    items=itemSnap.docs.map(d=>({id:d.id,...d.data()}));
+    godowns=godownSnap.docs.map(d=>({id:d.id,...d.data()}));
+    movements=movementSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    renderAll();
+    $("sync").textContent=" • Live";
+    $("dataStatus").textContent=`Firebase connected • ${items.length} items • ${godowns.length} godowns • ${movements.length} movements`;
+
+    // Continue with live updates after the initial load succeeds.
+    unsub=[
+      onSnapshot(collection(db,"items"),s=>{
+        items=s.docs.map(d=>({id:d.id,...d.data()}));
+        renderAll();
+      },e=>showFirebaseError("items",e)),
+      onSnapshot(collection(db,"godowns"),s=>{
+        godowns=s.docs.map(d=>({id:d.id,...d.data()}));
+        renderAll();
+      },e=>showFirebaseError("godowns",e)),
+      onSnapshot(collection(db,"movements"),s=>{
+        movements=s.docs.map(d=>({id:d.id,...d.data()}));
+        renderAll();
+      },e=>showFirebaseError("movements",e))
+    ];
+  }catch(e){
+    console.error("Firebase initial load failed:",e);
+    $("sync").textContent=" • Firebase error";
+    $("dataStatus").textContent=`Firebase error: ${e.code||e.message||e}`;
+    toast("Firebase data could not be loaded.");
+  }
+}
+
+function showFirebaseError(collectionName,e){
+  console.error(`Firestore ${collectionName} listener error:`,e);
+  $("sync").textContent=" • Firebase error";
+  $("dataStatus").textContent=`Firebase ${collectionName} error: ${e.code||e.message||e}`;
+}
+function stopListeners(){unsub.forEach(f=>f&&f());unsub=[]}
+
+function fillReportFilters(){
+  const active=godowns.filter(g=>g.active!==false);
+  ["stockGodownFilter","dailyGodownFilter","rangeGodownFilter","ledgerGodownFilter"].forEach(id=>{
+    const el=$(id); if(!el)return; const old=el.value;
+    el.innerHTML=`<option value="">All Godowns</option>${active.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join("")}`;
+    if(active.some(g=>g.id===old))el.value=old;
+  });
+  ["rangeItemFilter","ledgerItemFilter"].forEach(id=>{
+    const el=$(id); if(!el)return; const old=el.value;
+    el.innerHTML=(id==="ledgerItemFilter"?`<option value="">Select Item</option>`:`<option value="">All Items</option>`)+items.map(i=>`<option value="${esc(i.id)}">${esc(i.itemCode||"")} — ${esc(i.itemName||"")}</option>`).join("");
+    if(items.some(i=>i.id===old))el.value=old;
+  });
+}
+function renderAll(){
+  renderSelects(); renderItems(); renderGodowns(); renderHistory(); fillReportFilters(); renderStock(); renderDashboard(); renderRangeReport(); renderLedger();
+}
+function renderSelects(){
+  const active=godowns.filter(g=>g.active!==false);
+  const optItems=items.map(i=>`<option value="${esc(i.id)}">${esc(i.itemCode||"")} — ${esc(i.itemName||"")}</option>`).join("");
+  const optGod=active.map(g=>`<option value="${esc(g.id)}">${esc(g.name)}</option>`).join("");
+  $("mItem").innerHTML=optItems;
+  $("mFrom").innerHTML=optGod;
+  $("mTo").innerHTML=optGod;
+}
+function renderItems(){
+  const term=$("itemSearch").value.toLowerCase();
+  const rows=items.filter(i=>(i.itemName+" "+i.itemCode+" "+i.category).toLowerCase().includes(term));
+  $("itemsBody").innerHTML=rows.length?rows.map(i=>`<tr><td>${esc(i.itemCode)}</td><td><b>${esc(i.itemName)}</b></td><td>${esc(i.category||"")}</td><td>${esc(i.unit||"KG")}</td><td><button class="btn secondary" onclick="editItem('${i.id}')">Edit</button></td></tr>`).join(""):`<tr><td colspan="5" class="empty">No items</td></tr>`;
+}
+function renderGodowns(){
+  $("godownsBody").innerHTML=godowns.length?godowns.map(g=>`<tr><td><b>${esc(g.name)}</b></td><td>${g.active===false?'<span class="badge bad">Inactive</span>':'<span class="badge ok">Active</span>'}</td><td><button class="btn secondary" onclick="editGodown('${g.id}')">Edit</button></td></tr>`).join(""):`<tr><td colspan="3" class="empty">No godowns</td></tr>`;
+}
+function renderHistory(){
+  const term=$("histSearch").value.toLowerCase();
+  const rows=movements.filter(m=>(m.itemName+" "+m.party+" "+m.type+" "+m.fromName+" "+m.toName).toLowerCase().includes(term)).slice(0,200);
+  $("historyBody").innerHTML=rows.length?rows.map(m=>{
+    const qty=Number(m.qty||0).toFixed(3);
+    const place=m.type==="TRANSFER"?`${esc(m.fromName||"")} → ${esc(m.toName||"")}`:esc(m.type==="IN"?m.toName||"":m.fromName||"");
+    return `<tr><td>${esc(m.date||"")}</td><td><span class="badge">${esc(m.type)}</span></td><td>${esc(m.itemName||m.itemId)}</td><td>${qty}</td><td>${place}</td><td>${esc(m.userEmail||"")}</td><td><div class="row"><button class="btn secondary" onclick="editMovement('${m.id}')">Edit</button><button class="btn danger" onclick="deleteMovement('${m.id}')">Delete</button></div></td></tr>`;
+  }).join(""):`<tr><td colspan="7" class="empty">No movements</td></tr>`;
+}
+function openingForItemGodown(itemId,godownId,asOfDate=null){
+  let qty=0;
+  const item=items.find(i=>i.id===itemId);
+  // Item opening stock becomes effective on its Opening Stock Date.
+  // A blank date is kept backward-compatible with older records.
+  if(item && item.openingGodownId===godownId && (!asOfDate || !item.openingDate || item.openingDate<=asOfDate)){
+    qty+=Number(item.openingStock||0);
+  }
+  // Backward compatibility for opening-stock transactions created in V4.
+  movements.forEach(m=>{
+    if(m.type==="OPENING"&&m.itemId===itemId&&m.fromGodownId===godownId) qty+=Number(m.qty||0);
+  });
+  return qty;
+}
+function stockMap(){
+  const map={};
+  items.forEach(i=>godowns.forEach(g=>{
+    const k=i.id+"|"+g.id,o=openingForItemGodown(i.id,g.id,today());
+    map[k]={item:i,godown:g,opening:o,inQty:0,outQty:0,tin:0,tout:0,qty:o};
+  }));
+  movements.forEach(m=>{
+    const q=Number(m.qty||0);
+    if(m.type==="IN"&&map[m.itemId+"|"+m.toGodownId]){
+      const r=map[m.itemId+"|"+m.toGodownId];r.inQty+=q;r.qty+=q;
+    }
+    if(m.type==="OUT"&&map[m.itemId+"|"+m.fromGodownId]){
+      const r=map[m.itemId+"|"+m.fromGodownId];r.outQty+=q;r.qty-=q;
+    }
+    if(m.type==="TRANSFER"){
+      if(map[m.itemId+"|"+m.fromGodownId]){const r=map[m.itemId+"|"+m.fromGodownId];r.tout+=q;r.qty-=q;}
+      if(map[m.itemId+"|"+m.toGodownId]){const r=map[m.itemId+"|"+m.toGodownId];r.tin+=q;r.qty+=q;}
+    }
+  });
+  return Object.values(map);
+}
+function itemSummary(){
+  const map={};
+
+  stockMap().forEach(r=>{
+    const k=r.item.id;
+    if(!map[k]) map[k]={item:r.item,opening:0,inQty:0,outQty:0,tin:0,tout:0,current:0};
+    const x=map[k];
+    x.opening+=Number(r.opening||0);
+    x.inQty+=Number(r.inQty||0);
+    x.outQty+=Number(r.outQty||0);
+    x.tin+=Number(r.tin||0);
+    x.tout+=Number(r.tout||0);
+    x.current+=Number(r.qty||0);
+  });
+
+  // Legacy Stock-In entries created before godown selection existed.
+  // They are company stock, but cannot be placed in a godown report until
+  // the user assigns a godown through History -> Edit.
+  movements.filter(m=>m.type==="IN"&&!m.toGodownId).forEach(m=>{
+    const k=m.itemId;
+    const item=items.find(i=>i.id===k);
+    if(!item) return;
+    if(!map[k]) map[k]={item,opening:0,inQty:0,outQty:0,tin:0,tout:0,current:0};
+    const q=Number(m.qty||0);
+    map[k].inQty+=q;
+    map[k].current+=q;
+  });
+
+  return Object.values(map);
+}
+function stockAtDate(itemId,godownId,date){
+  let q=0;
+  const item=items.find(i=>i.id===itemId);
+  if(item && item.openingGodownId===godownId && (!date || !item.openingDate || item.openingDate<=date)) q+=Number(item.openingStock||0);
+  movements.forEach(m=>{
+    if(!m.date||m.date>date||m.itemId!==itemId)return;
+    const x=Number(m.qty||0);
+    if(m.type==="OPENING"&&m.fromGodownId===godownId)q+=x;
+    if(m.type==="IN"&&m.toGodownId===godownId)q+=x;
+    if(m.type==="OUT"&&m.fromGodownId===godownId)q-=x;
+    if(m.type==="TRANSFER"&&m.fromGodownId===godownId)q-=x;
+    if(m.type==="TRANSFER"&&m.toGodownId===godownId)q+=x;
+  });
+  return q;
+}
+function dailySummary(date,godownId=""){
+  const d=date||today();
+  // Opening for a day is the actual closing balance of the immediately
+  // preceding calendar day. Use UTC-safe string arithmetic so India timezone
+  // cannot accidentally move the date back by another day.
+  const prev=previousDate(d),rows=[];
+  items.forEach(item=>{
+    let opening=0,inQty=0,outQty=0,tin=0,tout=0;
+    godowns.filter(g=>g.active!==false&&(!godownId||g.id===godownId)).forEach(g=>{
+      opening+=stockAtDate(item.id,g.id,prev);
+      // The opening balance belongs to the selected Opening Stock Date.
+      // Therefore it is part of that day's opening, not treated as a movement.
+      if(item.openingDate===d && item.openingGodownId===g.id) opening+=Number(item.openingStock||0);
+      movements.forEach(m=>{
+        if(m.date!==d||m.itemId!==item.id)return;
+        const q=Number(m.qty||0);
+        if(m.type==="IN"&&m.toGodownId===g.id)inQty+=q;
+        if(m.type==="OUT"&&m.fromGodownId===g.id)outQty+=q;
+        if(m.type==="TRANSFER"&&m.toGodownId===g.id)tin+=q;
+        if(m.type==="TRANSFER"&&m.fromGodownId===g.id)tout+=q;
+      });
+    });
+    const closing=opening+inQty+tin-outQty-tout;
+    if(opening||inQty||outQty||tin||tout||closing)rows.push({item,opening,inQty,outQty,tin,tout,closing});
+  });
+  return rows;
+}
+function rangeSummary(fromDate,toDate,godownId="",itemId=""){
+  const rows=[]; if(!fromDate||!toDate||fromDate>toDate)return rows;
+  const prev=previousDate(fromDate);
+  items.filter(i=>!itemId||i.id===itemId).forEach(item=>{
+    let opening=0,inQty=0,outQty=0,tin=0,tout=0;
+    godowns.filter(g=>g.active!==false&&(!godownId||g.id===godownId)).forEach(g=>{
+      opening+=stockAtDate(item.id,g.id,prev);
+      // If the selected range starts on the item's opening date, that
+      // opening balance is the opening balance of the report itself.
+      if(item.openingDate===fromDate && item.openingGodownId===g.id) opening+=Number(item.openingStock||0);
+      movements.forEach(m=>{if(m.date<fromDate||m.date>toDate||m.itemId!==item.id)return;const q=Number(m.qty||0);if(m.type==="IN"&&m.toGodownId===g.id)inQty+=q;if(m.type==="OUT"&&m.fromGodownId===g.id)outQty+=q;if(m.type==="TRANSFER"&&m.toGodownId===g.id)tin+=q;if(m.type==="TRANSFER"&&m.fromGodownId===g.id)tout+=q;});
+    });
+    let closing=opening+inQty+tin-outQty-tout;
+    // If opening stock begins after the range starts, it becomes available
+    // during the range and therefore belongs in closing.
+    if(item.openingDate>fromDate && item.openingDate<=toDate) closing+=Number(item.openingStock||0);
+    if(opening||inQty||outQty||tin||tout||closing)rows.push({item,opening,inQty,outQty,tin,tout,closing});
+  }); return rows;
+}
+function renderRangeReport(){const f=$("rangeFrom"),t=$("rangeTo");if(!f||!t)return;const rows=rangeSummary(f.value||today(),t.value||today(),$("rangeGodownFilter")?.value||"",$("rangeItemFilter")?.value||"");$("rangeBody").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.item.itemName)}</b></td><td>${r.opening.toFixed(3)}</td><td>${r.inQty.toFixed(3)}</td><td>${r.outQty.toFixed(3)}</td><td>${r.tin.toFixed(3)}</td><td>${r.tout.toFixed(3)}</td><td><b>${r.closing.toFixed(3)}</b></td></tr>`).join(""):`<tr><td colspan="7" class="empty">No stock movement for the selected range.</td></tr>`;}
+function ledgerRows(itemId,godownId,fromDate,toDate){
+  if(!itemId)return null; const item=items.find(i=>i.id===itemId);if(!item)return null; const f=fromDate||"0000-01-01",t=toDate||today();
+  const prev=previousDate(f);
+  let opening=godowns.filter(g=>g.active!==false&&(!godownId||g.id===godownId)).reduce((sum,g)=>sum+stockAtDate(itemId,g.id,prev),0);
+  const rows=[];
+  // Opening stock dated exactly at the ledger start is part of the opening balance.
+  if(item.openingDate===f && (!godownId||item.openingGodownId===godownId)) opening+=Number(item.openingStock||0);
+  let balance=opening;
+  // If opening stock starts inside the selected period, show it as a ledger line.
+  if(item.openingDate>f && item.openingDate<=t && (!godownId||item.openingGodownId===godownId)){
+    const q=Number(item.openingStock||0);
+    balance+=q;
+    rows.push({date:item.openingDate,type:"OPENING",place:godowns.find(g=>g.id===item.openingGodownId)?.name||"",inQty:q,outQty:0,balance,party:"",note:"Opening Stock"});
+  }
+  movements.filter(m=>m.itemId===itemId&&m.date>=f&&m.date<=t).sort((a,b)=>(a.date||"").localeCompare(b.date||"")||String(a.id).localeCompare(String(b.id))).forEach(m=>{let iq=0,oq=0,place="";const q=Number(m.qty||0);if(m.type==="IN"&&(!godownId||m.toGodownId===godownId)){iq=q;place=m.toName||"";}if(m.type==="OUT"&&(!godownId||m.fromGodownId===godownId)){oq=q;place=m.fromName||"";}if(m.type==="TRANSFER"){if(!godownId||m.fromGodownId===godownId){oq=q;place=(m.fromName||"")+" → "+(m.toName||"");}if(!godownId||m.toGodownId===godownId){iq=q;place=(m.fromName||"")+" → "+(m.toName||"");}}if(iq||oq){balance+=iq-oq;rows.push({date:m.date,type:m.type,place,inQty:iq,outQty:oq,balance,party:m.party||"",note:m.note||""});}});
+  return {item,opening,rows};
+}
+function renderLedger(){const body=$("ledgerBody");if(!body)return;const id=$("ledgerItemFilter")?.value||"";if(!id){body.innerHTML=`<tr><td colspan="7" class="empty">Select an item to view its ledger.</td></tr>`;return;}const r=ledgerRows(id,$("ledgerGodownFilter")?.value||"",$("ledgerFrom")?.value||today(),$("ledgerTo")?.value||today());body.innerHTML=r&&r.rows.length?r.rows.map(x=>`<tr><td>${esc(x.date)}</td><td><span class="badge">${esc(x.type)}</span></td><td>${esc(x.place)}</td><td>${x.inQty.toFixed(3)}</td><td>${x.outQty.toFixed(3)}</td><td><b>${x.balance.toFixed(3)}</b></td><td>${esc(x.party||x.note||"")}</td></tr>`).join(""):`<tr><td colspan="7" class="empty">No ledger entries for the selected filters.</td></tr>`;}
+function fmtTimestamp(v){try{const d=v?.toDate?v.toDate():new Date(v);return isNaN(d)?"":d.toLocaleString("en-IN");}catch{return ""}}
+async function loadAuditLogs(){try{const snap=await getDocs(collection(db,"auditLogs"));auditLogs=snap.docs.map(d=>({id:d.id,...d.data()}));auditLogs.sort((a,b)=>String(b.createdAt?.seconds||0).localeCompare(String(a.createdAt?.seconds||0)));renderAudit();}catch(e){console.error(e);toast("Audit trail could not be loaded: "+e.message);}}
+function renderAudit(){const body=$("auditBody");if(!body)return;body.innerHTML=auditLogs.length?auditLogs.slice(0,300).map(a=>`<tr><td>${esc(fmtTimestamp(a.createdAt))}</td><td><span class="badge">${esc(a.action||"")}</span></td><td>${esc(a.itemName||a.godownName||"")}</td><td>${esc(a.movementId||"").slice(0,10)}</td><td>${a.qty!=null?Number(a.qty).toFixed(3):a.afterQty!=null?Number(a.afterQty).toFixed(3):""}</td><td>${esc(a.userEmail||a.deletedByEmail||"")}</td></tr>`).join(""):`<tr><td colspan="6" class="empty">No audit records found.</td></tr>`;}
+function reportText(title,rows){return ["NAVKAR IMPEX","Spices • Dry Fruits • Seeds",title,"",...rows.map(r=>`${r.item.itemName}: Opening ${r.opening.toFixed(3)} KG | IN ${r.inQty.toFixed(3)} | OUT ${r.outQty.toFixed(3)} | T-IN ${r.tin.toFixed(3)} | T-OUT ${r.tout.toFixed(3)} | Closing ${r.closing.toFixed(3)} KG`)].join("\n");}
+function openWhatsApp(text){window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank");}
+function downloadFile(name,content,type="application/json"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+async function backupData(){try{let audits=[];try{const s=await getDocs(collection(db,"auditLogs"));audits=s.docs.map(d=>({id:d.id,...d.data()}));}catch(e){console.warn("Audit backup skipped",e);}downloadFile(`navkar-impex-backup-${today()}.json`,JSON.stringify({backupVersion:"5.0",exportedAt:new Date().toISOString(),projectId:"navkar-stock",items,godowns,movements,auditLogs:audits},null,2));toast("Backup downloaded.");}catch(e){toast("Backup failed: "+e.message);}}
+function renderStock(){
+  const filter=$("stockGodownFilter").value||"";
+  const rows=stockMap()
+    .filter(r=>!filter||r.godown.id===filter)
+    .filter(r=>Math.abs(Number(r.qty||0))>0.0000001)
+    .sort((a,b)=>(a.item.itemName||"").localeCompare(b.item.itemName||"") || (a.godown.name||"").localeCompare(b.godown.name||""));
+
+  $("stockBody").innerHTML=rows.length
+    ? rows.map(r=>`<tr>
+        <td><b>${esc(r.item.itemName||"")}</b><div class="small">${esc(r.item.itemCode||"")}</div></td>
+        <td>${esc(r.godown.name||"")}</td>
+        <td><b>${Number(r.qty||0).toFixed(3)}</b></td>
+      </tr>`).join("")
+    : `<tr><td colspan="3" class="empty">No stock available for the selected godown.</td></tr>`;
+}
+function renderDashboard(){
+  const selectedDate=$("dashboardDate")?.value||today();
+  const rows=dailySummary(selectedDate,"");
+  const assignedStock=stockMap().reduce((a,r)=>a+Number(r.qty||0),0);
+  const unassignedIn=movements.filter(m=>m.type==="IN"&&!m.toGodownId).reduce((s,m)=>s+Number(m.qty||0),0);
+
+  $("kItems").textContent=items.length;
+  $("kGodowns").textContent=godowns.length;
+  // Company stock includes legacy IN entries even when they have not yet
+  // been assigned to a godown. Godown-wise reports remain strict.
+  $("kStock").textContent=(assignedStock+unassignedIn).toFixed(3);
+  const td=today();
+  $("kTodayIn").textContent=movements.filter(m=>m.date===td&&m.type==="IN").reduce((a,m)=>a+Number(m.qty||0),0).toFixed(3);
+  $("kTodayOut").textContent=movements.filter(m=>m.date===td&&m.type==="OUT").reduce((a,m)=>a+Number(m.qty||0),0).toFixed(3);
+  $("kTodayTransfer").textContent=movements.filter(m=>m.date===td&&m.type==="TRANSFER").reduce((a,m)=>a+Number(m.qty||0),0).toFixed(3);
+
+  const status=$("dataStatus");
+  if(status){
+    status.textContent=`Firebase connected • ${items.length} items • ${godowns.length} godowns • ${movements.length} movements`
+      +(unassignedIn>0?` • WARNING: ${unassignedIn.toFixed(3)} KG IN needs a godown assignment`:"");
+  }
+
+  $("itemSummaryBody").innerHTML=rows.length
+    ? rows.map(r=>`<tr>
+        <td><b>${esc(r.item.itemName||"")}</b></td>
+        <td>${r.opening.toFixed(3)}</td>
+        <td>${r.inQty.toFixed(3)}</td>
+        <td>${r.outQty.toFixed(3)}</td>
+        <td>${r.tin.toFixed(3)}</td>
+        <td>${r.tout.toFixed(3)}</td>
+        <td><b>${r.closing.toFixed(3)}</b></td>
+      </tr>`).join("")
+    : `<tr><td colspan="7" class="empty">No stock found for the selected date.</td></tr>`;
+
+  renderDailySummary();
+}
+function renderDailySummary(){
+  const rows=dailySummary($("dailyDate").value||today(),$("dailyGodownFilter").value||"");
+  $("dailyBody").innerHTML=rows.length?rows.map(r=>`<tr><td><b>${esc(r.item.itemName)}</b></td><td>${r.opening.toFixed(3)}</td><td>${r.inQty.toFixed(3)}</td><td>${r.outQty.toFixed(3)}</td><td>${r.tin.toFixed(3)}</td><td>${r.tout.toFixed(3)}</td><td><b>${r.closing.toFixed(3)}</b></td></tr>`).join(""):`<tr><td colspan="7" class="empty">No transactions for this date.</td></tr>`;
+}
+$("mType").onchange=()=>{
+  const t=$("mType").value;
+  // Stock In and Stock Out each use exactly ONE godown.
+  // Transfer uses From + To godown.
+  $("mFrom").parentElement.classList.remove("hidden");
+  $("mTo").parentElement.classList.toggle("hidden",t!=="TRANSFER");
+  const label=$("mFrom").parentElement.querySelector("label");
+  if(label) label.textContent=(t==="TRANSFER")?"From Godown":"Godown";
+};
+$("saveMovement").onclick=saveMovement;
+async function saveMovement(){
+  if(!user)return;
+  const type=$("mType").value,item=items.find(i=>i.id===$("mItem").value),qty=Number($("mQty").value);
+  if(!item||!qty||qty<=0){toast("Select item and valid quantity.");return}
+  const from=godowns.find(g=>g.id===$("mFrom").value);
+  const to=godowns.find(g=>g.id===$("mTo").value);
+
+  if(type==="TRANSFER"){
+    if(!from||!to||from.id===to.id){toast("Transfer requires two different godowns.");return}
+    const source=stockMap().find(r=>r.item.id===item.id&&r.godown.id===from.id);
+    if(!source||source.qty<qty){toast("Insufficient stock in source godown. Transfer blocked.");return}
+  } else {
+    if(!from){toast("Select one godown.");return}
+    if(type==="OUT"){
+      const source=stockMap().find(r=>r.item.id===item.id&&r.godown.id===from.id);
+      if(!source||source.qty<qty){toast("Insufficient stock. OUT blocked.");return}
+    }
+  }
+
+  const data={
+    type,date:$("mDate").value||today(),itemId:item.id,itemName:item.itemName,itemCode:item.itemCode||"",qty,
+    // IN goes INTO the selected godown. OUT comes FROM the selected godown.
+    // TRANSFER uses both From and To.
+    fromGodownId:(type==="OUT"||type==="TRANSFER")?from.id:null,
+    fromName:(type==="OUT"||type==="TRANSFER")?from.name:null,
+    toGodownId:(type==="IN"||type==="TRANSFER")?((type==="IN")?from.id:to.id):null,
+    toName:(type==="IN"||type==="TRANSFER")?((type==="IN")?from.name:to.name):null,
+    party:$("mParty").value.trim(),note:$("mNote").value.trim(),
+    userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+  };
+  try{
+    const ref=await addDoc(collection(db,"movements"),data);
+    try{await addDoc(collection(db,"auditLogs"),{action:"CREATE_MOVEMENT",movementId:ref.id,itemId:item.id,itemName:item.itemName,type,qty,date:data.date,fromGodownId:data.fromGodownId||null,toGodownId:data.toGodownId||null,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}
+    $("mQty").value="";$("mParty").value="";$("mNote").value="";
+    toast(type==="OPENING"?"Opening stock saved.":"Movement saved.");
+  }catch(e){console.error(e);toast("Could not save: "+e.message)}
+}
+$("newItem").onclick=()=>openItem();
+window.editItem=id=>openItem(items.find(i=>i.id===id));
+function openItem(x={}){
+  $("modalTitle").textContent=x.id?"Edit Item":"New Item";
+  $("modalBody").innerHTML=`<div class="grid">
+  <div><input id="fName" value="${esc(x.itemName||"")}"></div>
+  <div><label>Category</label><input id="fCat" value="${esc(x.category||"")}"></div>
+  <div><label>Unit</label><input id="fUnit" value="${esc(x.unit||"KG")}"></div>
+  <div><label>Opening Stock KG</label><input id="fOpen" type="number" min="0" step="0.001" value="${Number(x.openingStock||0)}"></div>
+  <div><label>Opening Stock Date</label><input id="fOpenDate" type="date" value="${esc(x.openingDate||(!x.id?today():""))}"></div>
+  <div><label>Opening Stock Godown</label><select id="fOpenGodown">${godowns.filter(g=>g.active!==false).map(g=>`<option value="${esc(g.id)}" ${x.openingGodownId===g.id?"selected":""}>${esc(g.name)}</option>`).join("")}</select></div>
+  </div><div class="row" style="margin-top:14px"><button class="btn primary" id="saveItem">Save Item</button></div>`;
+  $("modal").classList.remove("hidden");
+  $("saveItem").onclick=async()=>{
+    const data={itemCode:$("fCode").value.trim(),itemName:$("fName").value.trim(),category:$("fCat").value.trim(),unit:$("fUnit").value.trim()||"KG",openingStock:Number($("fOpen").value||0),openingDate:$("fOpenDate").value||"",openingGodownId:$("fOpenGodown").value||"",updatedAt:serverTimestamp(),updatedBy:user.email||""};
+    if(!data.itemName){toast("Item name required.");return}
+    if(data.openingStock>0&&!data.openingDate){toast("Select the opening stock date.");return}
+    if(data.openingStock>0&&!data.openingGodownId){toast("Select the godown for opening stock.");return}
+    try{if(x.id){await updateDoc(doc(db,"items",x.id),data);try{await addDoc(collection(db,"auditLogs"),{action:"EDIT_ITEM",itemId:x.id,itemName:data.itemName,beforeName:x.itemName||"",afterName:data.itemName,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}}else{const ref=await addDoc(collection(db,"items"),{...data,createdAt:serverTimestamp(),createdBy:user.email||""});try{await addDoc(collection(db,"auditLogs"),{action:"CREATE_ITEM",itemId:ref.id,itemName:data.itemName,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}}closeModal();toast("Item saved.");}catch(e){toast(e.message)}
+  };
+}
+$("newGodown").onclick=()=>openGodown();
+window.editGodown=id=>openGodown(godowns.find(g=>g.id===id));
+function openGodown(x={}){
+  $("modalTitle").textContent=x.id?"Edit Godown":"New Godown";
+  $("modalBody").innerHTML=`<label>Godown Name</label><input id="gName" value="${esc(x.name||"")}"><div style="margin-top:10px"><label><input id="gActive" type="checkbox" ${x.active!==false?"checked":""} style="width:auto"> Active</label></div><div class="row" style="margin-top:14px"><button class="btn primary" id="saveGodown">Save Godown</button></div>`;
+  $("modal").classList.remove("hidden");
+  $("saveGodown").onclick=async()=>{
+    const data={name:$("gName").value.trim(),active:$("gActive").checked,updatedAt:serverTimestamp(),updatedBy:user.email||""};
+    if(!data.name){toast("Name required.");return}
+    try{if(x.id){await updateDoc(doc(db,"godowns",x.id),data);try{await addDoc(collection(db,"auditLogs"),{action:"EDIT_GODOWN",godownId:x.id,godownName:data.name,beforeName:x.name||"",afterName:data.name,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}}else{const ref=await addDoc(collection(db,"godowns"),{...data,createdAt:serverTimestamp(),createdBy:user.email||""});try{await addDoc(collection(db,"auditLogs"),{action:"CREATE_GODOWN",godownId:ref.id,godownName:data.name,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}}closeModal();toast("Godown saved.");}catch(e){toast(e.message)}
+  };
+}
+window.editMovement=id=>openMovement(movements.find(m=>m.id===id));
+function openMovement(x){
+  if(!x)return;
+  $("modalTitle").textContent="Edit Movement";
+  const currentGodownId=x.type==="IN"?x.toGodownId:(x.type==="OUT"?x.fromGodownId:"");
+  $("modalBody").innerHTML=`<div class="small">Edit the transaction and its godown. Stock will recalculate from the saved movement.</div>
+  <div class="grid" style="margin-top:12px">
+    <div><label>Date</label><input id="eDate" type="date" value="${esc(x.date||today())}"></div>
+    <div><label>Quantity KG</label><input id="eQty" type="number" step="0.001" min="0.001" value="${Number(x.qty||0)}"></div>
+    ${x.type==="TRANSFER"
+      ? `<div><label>From Godown</label><select id="eFrom">${godowns.filter(g=>g.active!==false).map(g=>`<option value="${esc(g.id)}" ${x.fromGodownId===g.id?"selected":""}>${esc(g.name)}</option>`).join("")}</select></div>
+         <div><label>To Godown</label><select id="eTo">${godowns.filter(g=>g.active!==false).map(g=>`<option value="${esc(g.id)}" ${x.toGodownId===g.id?"selected":""}>${esc(g.name)}</option>`).join("")}</select></div>`
+      : `<div><label>Godown</label><select id="eGodown"><option value="">Select godown</option>${godowns.filter(g=>g.active!==false).map(g=>`<option value="${esc(g.id)}" ${currentGodownId===g.id?"selected":""}>${esc(g.name)}</option>`).join("")}</select></div>`}
+    <div><label>Party / Reference</label><input id="eParty" value="${esc(x.party||"")}"></div>
+    <div><label>Note</label><input id="eNote" value="${esc(x.note||"")}"></div>
+  </div>
+  <div class="row" style="margin-top:14px"><button class="btn primary" id="saveMovEdit">Save Edit</button></div>`;
+  $("modal").classList.remove("hidden");
+  $("saveMovEdit").onclick=async()=>{
+    const q=Number($("eQty").value); if(!q||q<=0){toast("Invalid quantity.");return}
+    const patch={date:$("eDate").value,qty:q,party:$("eParty").value.trim(),note:$("eNote").value.trim(),updatedAt:serverTimestamp(),updatedBy:user.email||""};
+    if(x.type==="TRANSFER"){
+      const f=godowns.find(g=>g.id===$("eFrom").value),t=godowns.find(g=>g.id===$("eTo").value);
+      if(!f||!t||f.id===t.id){toast("Select two different godowns.");return}
+      patch.fromGodownId=f.id;patch.fromName=f.name;patch.toGodownId=t.id;patch.toName=t.name;
+    }else{
+      const g=godowns.find(g=>g.id===$("eGodown").value);
+      if(!g){toast("Select a godown.");return}
+      if(x.type==="IN"){patch.fromGodownId=null;patch.fromName=null;patch.toGodownId=g.id;patch.toName=g.name;}
+      if(x.type==="OUT"){patch.fromGodownId=g.id;patch.fromName=g.name;patch.toGodownId=null;patch.toName=null;}
+      if(x.type==="OPENING"){patch.fromGodownId=g.id;patch.fromName=g.name;patch.toGodownId=null;patch.toName=null;}
+    }
+    try{
+      await updateDoc(doc(db,"movements",x.id),patch);
+      try{await addDoc(collection(db,"auditLogs"),{action:"EDIT_MOVEMENT",movementId:x.id,itemId:x.itemId,itemName:x.itemName||"",type:x.type,beforeQty:x.qty,afterQty:q,beforeDate:x.date||"",afterDate:patch.date||"",beforeFromGodownId:x.fromGodownId||null,afterFromGodownId:patch.fromGodownId||null,beforeToGodownId:x.toGodownId||null,afterToGodownId:patch.toGodownId||null,userUid:user.uid,userEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}
+      closeModal();toast("Movement updated and stock recalculated.");
+    }catch(e){console.error(e);toast(e.message)}
+  };
+}
+window.deleteMovement=async id=>{const m=movements.find(x=>x.id===id);if(!m)return;if(!confirm(`Delete ${m.type} ${Number(m.qty||0).toFixed(3)} KG of ${m.itemName||"item"}? Stock will recalculate.`))return;try{await deleteDoc(doc(db,"movements",id));try{await addDoc(collection(db,"auditLogs"),{action:"DELETE_MOVEMENT",movementId:m.id,itemId:m.itemId,itemName:m.itemName||"",type:m.type,qty:m.qty,date:m.date||"",fromGodownId:m.fromGodownId||null,toGodownId:m.toGodownId||null,deletedBy:user.uid,deletedByEmail:user.email||"",createdAt:serverTimestamp()});}catch(ae){console.warn("Audit write skipped",ae);}toast("Entry deleted and stock recalculated.");}catch(e){console.error(e);toast("Delete failed: "+e.message)}};
+
+function closeModal(){$("modal").classList.add("hidden")}
+$("closeModal").onclick=closeModal;
+$("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
+
+document.querySelectorAll("[data-page]").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+function showPage(p){document.querySelectorAll(".page").forEach(x=>x.classList.add("hidden"));$(p).classList.remove("hidden");document.querySelectorAll(".tab,nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===p));if(p==="reports"){fillReportFilters();renderStock();renderDailySummary();renderRangeReport();renderLedger();}if(p==="audit")loadAuditLogs();}
+$("dashboardDate").value=today();$("dailyDate").value=today();$("rangeFrom").value=today();$("rangeTo").value=today();$("ledgerFrom").value=today();$("ledgerTo").value=today();$("mType").dispatchEvent(new Event("change"));
+$("dashboardDate").onchange=renderDashboard;$("stockGodownFilter").onchange=renderStock;$("dailyDate").onchange=renderDailySummary;$("dailyGodownFilter").onchange=renderDailySummary;$("rangeFrom").onchange=renderRangeReport;$("rangeTo").onchange=renderRangeReport;$("rangeGodownFilter").onchange=renderRangeReport;$("rangeItemFilter").onchange=renderRangeReport;$("ledgerItemFilter").onchange=renderLedger;$("ledgerGodownFilter").onchange=renderLedger;$("ledgerFrom").onchange=renderLedger;$("ledgerTo").onchange=renderLedger;$("itemSearch").oninput=renderItems;$("histSearch").oninput=renderHistory;$("refresh").onclick=()=>startListeners();$("auditRefresh").onclick=loadAuditLogs;$("backupBtn").onclick=backupData;
+$("csvBtn").onclick=()=>{const rows=stockMap().filter(r=>Math.abs(Number(r.qty||0))>0.0000001),csv=["Item,Godown,Stock KG",...rows.map(r=>`"${(r.item.itemName||"").replaceAll('"','""')}","${(r.godown.name||"").replaceAll('"','""')}",${r.qty}`)].join("\n");downloadFile("navkar-impex-current-stock.csv",csv,"text/csv");};
+$("rangeCsvBtn").onclick=()=>{const rows=rangeSummary($("rangeFrom").value,$("rangeTo").value,$("rangeGodownFilter").value,$("rangeItemFilter").value),csv=["Item,Opening,IN,OUT,Transfer IN,Transfer OUT,Closing",...rows.map(r=>`"${(r.item.itemName||"").replaceAll('"','""')}",${r.opening},${r.inQty},${r.outQty},${r.tin},${r.tout},${r.closing}`)].join("\n");downloadFile("navkar-impex-date-range.csv",csv,"text/csv");};
+$("stockWaBtn").onclick=()=>{const rows=stockMap().filter(r=>Math.abs(Number(r.qty||0))>0.0000001);openWhatsApp(["NAVKAR IMPEX","Spices • Dry Fruits • Seeds","Current Stock — Godown Wise","",...rows.map(r=>`${r.item.itemName} | ${r.godown.name} | ${Number(r.qty).toFixed(3)} KG`)].join("\n"));};
+$("dailyWaBtn").onclick=()=>openWhatsApp(reportText(`Daily Summary — ${$("dailyDate").value}`,dailySummary($("dailyDate").value,$("dailyGodownFilter").value)));
+$("rangeWaBtn").onclick=()=>openWhatsApp(reportText(`Date Range — ${$("rangeFrom").value} to ${$("rangeTo").value}`,rangeSummary($("rangeFrom").value,$("rangeTo").value,$("rangeGodownFilter").value,$("rangeItemFilter").value)));
+$("ledgerWaBtn").onclick=()=>{const id=$("ledgerItemFilter").value;if(!id){toast("Select an item first.");return}const r=ledgerRows(id,$("ledgerGodownFilter").value,$("ledgerFrom").value,$("ledgerTo").value);openWhatsApp(["NAVKAR IMPEX","Spices • Dry Fruits • Seeds",`Item Ledger — ${r.item.itemName}`,`Opening Balance: ${r.opening.toFixed(3)} KG`,"",...r.rows.map(x=>`${x.date} | ${x.type} | ${x.place} | IN ${x.inQty.toFixed(3)} | OUT ${x.outQty.toFixed(3)} | Bal ${x.balance.toFixed(3)} KG`)].join("\n"));};
+
+window.addEventListener("error",e=>{
+  const el=document.getElementById("dataStatus");
+  if(el) el.textContent="App error: "+(e.message||"Unknown JavaScript error");
+  console.error(e.error||e.message);
+});
+window.addEventListener("unhandledrejection",e=>{
+  const el=document.getElementById("dataStatus");
+  if(el) el.textContent="App error: "+(e.reason?.message||e.reason||"Unhandled promise error");
+  console.error(e.reason);
+});
+
+</script>
+
+<script>
+/* NAVKAR IMPEX: visible item serial numbers.
+   Item Code remains internal only; users see S.No. + Item Name. */
+document.addEventListener("DOMContentLoaded", () => {
+  const renumberItems = () => {
+    document.querySelectorAll("[data-item-list]").forEach(list => {
+      let n = 1;
+      list.querySelectorAll("[data-item-row]").forEach(row => {
+        const cell = row.querySelector("[data-serial]");
+        if (cell) cell.textContent = n++;
+      });
+    });
+  };
+  renumberItems();
+  new MutationObserver(renumberItems).observe(document.body, {childList:true, subtree:true});
+});
+</script>
+
+
+<script>
+/* NAVKAR IMPEX: Opening Stock Date
+   Opening quantity participates only on/after its selected opening date. */
+function navkarOpeningApplies(openingDate, selectedDate) {
+  if (!openingDate || !selectedDate) return true;
+  return String(selectedDate).slice(0,10) >= String(openingDate).slice(0,10);
+}
+</script>
+
+</body>
+</html>
